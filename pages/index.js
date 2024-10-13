@@ -1,115 +1,135 @@
-import Image from "next/image";
-import localFont from "next/font/local";
+import { useState, useEffect } from 'react';
+import axios from 'axios';
+import { useRouter } from 'next/router';
+import Link from 'next/link';
 
-const geistSans = localFont({
-  src: "./fonts/GeistVF.woff",
-  variable: "--font-geist-sans",
-  weight: "100 900",
-});
-const geistMono = localFont({
-  src: "./fonts/GeistMonoVF.woff",
-  variable: "--font-geist-mono",
-  weight: "100 900",
-});
+export default function ProductList() {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [searchQuery, setSearchQuery] = useState(''); // New state for search input
+  const router = useRouter();
 
-export default function Home() {
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await axios.get('/api/products');
+        setProducts(response.data.data);
+        setLoading(false);
+      } catch (err) {
+        setError('Failed to Fetch Products');
+        setLoading(false);
+      }
+    };
+
+    const adminStatus = localStorage.getItem('admin') === 'true';
+    setIsAdmin(adminStatus);
+
+    fetchProducts();
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('admin'); // Remove admin status from local storage
+    setIsAdmin(false); // Update the state
+  };
+
+  const handleDelete = async (id) => {
+    if (confirm('Are you sure you want to delete this product?')) { // Confirm before deletion
+      try {
+        await axios.delete(`/api/products/${id}`);
+        setProducts(products.filter((product) => product._id !== id));
+      } catch (error) {
+        console.error('Failed to delete product', error);
+        alert('Failed to delete product');
+      }
+    }
+  };
+
+  const handleEdit = (product) => {
+    router.push(`/edit-product/${product._id}`);
+  };
+
+  // Filter products based on the searchQuery and compare it with the price
+  const filteredProducts = products.filter(product =>
+    product.price.toString().includes(searchQuery) // Ensure price is a string for comparison
+  );
+
   return (
-    <div
-      className={`${geistSans.variable} ${geistMono.variable} grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]`}
-    >
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              pages/index.js
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <div className="min-h-screen flex flex-col bg-gradient-to-r from-purple-500 to-indigo-600">
+      {/* Admin Header */}
+      {isAdmin && (
+        <div className="bg-gray-900 p-4 mb-4 text-white flex justify-between items-center rounded-b-lg shadow-lg">
+          <h1 className="text-xl font-bold">S / K</h1>
+          <div>
+            <Link href="/admin" className="p-2 mr-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-300 ease-in-out">
+              Add Product
+            </Link>
+            <button 
+              onClick={handleLogout} 
+              className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition duration-300 ease-in-out"
+            >
+              Logout
+            </button>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      )}
+
+      {/* Search Bar */}
+      <div className="p-4 mt-4">
+        <input
+          type="text"
+          placeholder="Search by price..."
+          value={searchQuery} // Bind input to searchQuery state
+          onChange={(e) => setSearchQuery(e.target.value)} // Update searchQuery on input change
+          className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition duration-200 text-gray-900 placeholder-gray-500"
+        />
+      </div>
+
+      {/* Loading/Error Messages */}
+      <div className="p-4 text-center">
+        {loading && (
+          <p className="text-lg font-bold text-white">Loading...</p>
+        )}
+        {error && (
+          <p className="text-red-500 text-lg font-bold">
+            {error}
+          </p>
+        )}
+      </div>
+
+      {/* Product List or "No Match" Message */}
+      <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        {!loading && !error && (
+          filteredProducts.length > 0 ? (
+            filteredProducts.map((product) => (
+              <div key={product._id} className="bg-white rounded-lg shadow-lg overflow-hidden transition-transform duration-200 lg:hover:scale-105">
+                <Link href={product.productUrl || '#'} className="flex flex-row sm:flex-col">
+                  <img
+                    src={product.imageUrl}
+                    alt={product.name}
+                    className="w-full h-48 object-contain rounded-t-lg"
+                    title={product.name}
+                  />
+                  <div className="p-4">
+                    <p className="text-gray-500">#{product.price}</p>
+                    <h3 className="font-bold text-gray-800 truncate-multiline" title={product.name}>{product.name}</h3>
+                    {product.productUrl ? null : <p className="text-red-500">Error: Product link is missing.</p>}
+                  </div>
+                </Link>
+                {isAdmin && (
+                  <div className="flex justify-between items-center p-4 border-t border-gray-300">
+                    <button onClick={() => handleEdit(product)} className="text-blue-500 hover:underline">Edit</button>
+                    <button onClick={() => handleDelete(product._id)} className="text-red-500 hover:underline">Delete</button>
+                  </div>
+                )}
+              </div>
+            ))
+          ) : (
+            <p className="text-lg font-bold text-white col-span-full text-center">No Match Product Found</p>
+          )
+        )}
+      </div>
     </div>
   );
 }
