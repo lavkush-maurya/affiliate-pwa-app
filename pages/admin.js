@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import Link from 'next/link';
 
 export default function AdminPage() {
   const [name, setName] = useState('');
@@ -58,9 +59,9 @@ export default function AdminPage() {
           <div className="flex items-center space-x-4">
             {isAdmin && (
               <>
-                <a href="/" className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-300 ease-in-out">
+                <Link href="/" className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-300 ease-in-out">
                   View Site
-                </a>
+                </Link>
                 <button 
                   onClick={handleLogout} 
                   className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition duration-300 ease-in-out"
