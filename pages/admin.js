@@ -11,15 +11,17 @@ export default function AdminPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [isDatabaseEnabled, setIsDatabaseEnabled] = useState(true); // Default to true
 
   useEffect(() => {
     const adminStatus = localStorage.getItem('admin') === 'true';
     setIsAdmin(adminStatus);
+    const databaseStatus = localStorage.getItem('database') === 'true';
+    setIsDatabaseEnabled(databaseStatus);
   }, []);
 
   const handleLogin = (e) => {
     e.preventDefault();
-
     const validUsername = process.env.NEXT_PUBLIC_ADMIN_USERNAME;
     const validPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD;
 
@@ -48,6 +50,12 @@ export default function AdminPage() {
         setProductUrl('');
       })
       .catch((error) => console.error(error));
+  };
+
+  const toggleDatabase = () => {
+    const newValue = !isDatabaseEnabled;
+    setIsDatabaseEnabled(newValue);
+    localStorage.setItem('database', newValue);
   };
 
   return (
@@ -117,6 +125,17 @@ export default function AdminPage() {
                   Add Product
                 </button>
               </form>
+
+              {/* Toggle Button for Database */}
+              <div className="mt-6 text-center">
+                <h2 className="text-lg font-bold text-white">Toggle Database</h2>
+                <button 
+                  onClick={toggleDatabase} 
+                  className={`mt-2 p-2 rounded-lg text-white ${isDatabaseEnabled ? 'bg-green-500' : 'bg-red-500'} transition duration-300`}
+                >
+                  {isDatabaseEnabled ? 'Set Database to Static' : 'Set Database to MongoDB'}
+                </button>
+              </div>
             </>
           ) : (
             <>
